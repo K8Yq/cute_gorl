@@ -1,8 +1,8 @@
-use cute_gorl;
+//use cute_gorl;
 
 mod common;
 
 #[test]
-fn it_adds_two() {
-    assert_eq!(4, cute_gorl::cute::cuter());
+fn gwa_externally() {
+    println!("Katy Time!! (external this time)");
 }
