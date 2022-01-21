@@ -1,32 +1,19 @@
 // 2 and 3 dimentional component focused mathematical vectors 
-use std::ops::{Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign};
+use std::ops::{Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, Neg};
 use std::fmt::{Display, Formatter, Error};
 use std::cmp::PartialEq;
 use std::f64::consts::PI;
+use crate::math;
 
-const D_SIGNIFICANT: f64 = 0.0000001;
-#[inline]
-fn cosq(sin_a: f64) -> f64 {
-    (1.0 - sin_a*sin_a).sqrt()
-}
-pub struct Polar {
-    r: f64,
-    plr: f64
-    // radial distance, and polar angle
-}
+#[derive(Copy, Clone, Debug, Default)]
 pub struct Vector2 {
     pub x: f64,
     pub y: f64
 }
 impl Vector2 {
     
-    pub fn from_polar(p: &Polar) -> Vector2 {
-        let sin_plr: f64 = p.plr.sin();
-        let cos_plr: f64 = cosq(sin_plr);
-        Vector2 {
-            x: p.r * cos_plr,
-            y: p.r * sin_plr
-        }
+    pub fn new(x: f64, y: f64) -> Self {
+        Self { x: x, y: y }
     }
     // tetermines whether or not the vector is is the null-vector (0,0)
     #[inline]
@@ -36,7 +23,7 @@ impl Vector2 {
     // tetermines whether or not the vector is normalized (of length 1) 
     #[inline]
     pub fn is_normalized(&self) -> bool {
-        (1.0 - self.magn_sq()).abs() < D_SIGNIFICANT
+        (1.0 - self.magn_sq()).abs() < math::EPSILON
     }
     // tetermines whether or not one vector is a multiple of the other. Inputs must not be null-vectors
     #[inline]
@@ -75,10 +62,18 @@ impl Vector2 {
     pub fn dist(v1:&Self, v2:&Self) -> f64 {
         Self::dist_sq(v1, v2).sqrt()
     }
+    pub fn clamp_max(&mut self, max: f64) {
+        let len: f64 = self.magn();
+        if len > max { *self *= max / len; }
+    }
+    pub fn clamp_min(&mut self, min: f64) {
+        let len: f64 = self.magn();
+        if len < min { *self *= min / len; }
+    }
     #[inline]
     pub fn lerp(v1: &Self, v2: &Self, factor: f64) -> Self {
         let temp = 1.0 - factor;
-        Vector2 {
+        Self {
             x: v1.x*temp + v2.x*factor,
             y: v1.y*temp + v2.y*factor
         }
@@ -95,11 +90,17 @@ impl Vector2 {
     }
     pub fn rotate(&self, angle: f64) -> Self {
         let sin_a: f64 = angle.sin();
-        let cos_a: f64 = cosq(sin_a);
-        Vector2 {
+        let cos_a: f64 = math::cosq(sin_a);
+        Self {
             x: self.x*cos_a - self.y*sin_a,
             y: self.y*cos_a + self.x*sin_a
         }
+    }
+    pub fn rotate_right(&self) -> Self {
+        Self { x: -self.y, y:  self.x }
+    }
+    pub fn rotate_left(&self) -> Self {
+        Self { x:  self.y, y: -self.x }
     }
     pub fn reflect(&self, n0: &Self) -> Self {
         let factor: f64 = 2.0 * &Self::scalar(self, n0);
@@ -108,13 +109,10 @@ impl Vector2 {
     }
 }
 
-impl Polar {
-    
-    pub fn from_vector2(v: &Vector2) -> Self {
-        Polar {
-            r:   v.magn(),
-            plr: (v.x/v.y).atan()
-        }
+impl Neg for Vector2 {
+    type Output = Vector2;
+    fn neg(self) -> Self::Output {
+        Self::Output { x: -self.x, y: -self.y }
     }
 }
 impl PartialEq for Vector2{
@@ -154,7 +152,8 @@ impl Mul<&Vector2> for f64{
 impl Div<f64> for &Vector2{
     type Output = Vector2;
     fn div(self, quotient: f64) -> Self::Output {
-        Vector2 { x: self.x/quotient, y: self.y/quotient }
+        let f: f64 = 1./quotient;
+        Vector2 { x: self.x*f, y: self.y*f }
     }
 }
 impl AddAssign<Self> for Vector2 {
@@ -189,8 +188,9 @@ impl MulAssign<f64> for Vector2 {
 }
 impl DivAssign<f64> for Vector2 {
     fn div_assign(&mut self, other: f64) {
-        self.x /= other;
-        self.y /= other;
+        let f: f64 = 1./other;
+        self.x *= f;
+        self.y *= f;
     }
 }
 impl Display for Vector2 {
