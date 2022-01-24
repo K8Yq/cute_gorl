@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["NULL","The Nullvector (0 0)"]],"struct":[["Vector2","2D Vector"]]});

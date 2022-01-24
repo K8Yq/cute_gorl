@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["cute",""],["vector2","Mathematical vectors in 2 dimentional space. "],["vector3","Mathematical vectors in 3 dimentional space. "]]});
